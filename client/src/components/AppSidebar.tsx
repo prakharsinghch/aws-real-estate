@@ -20,8 +20,8 @@ import Link from 'next/link';
       ] 
       : [
         {icon : Heart, label: 'Favourites', href: '/tenants/favourites'},
-        {icon : Home, label: 'Home', href: '/tenants/residences'},
-        {icon : FileText, label: 'Applications', href: '/tenants/applications'},
+        {icon : Home, label: 'Applications', href: '/tenants/applications'},
+        {icon : FileText, label: 'Residences', href: '/tenants/residences'},
         {icon : Settings, label: 'Settings', href: '/tenants/settings'}
       ]
 

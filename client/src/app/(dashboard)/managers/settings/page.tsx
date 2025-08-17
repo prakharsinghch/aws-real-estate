@@ -30,7 +30,7 @@ const ManagerSettings = () => {
     <SettingsForm
       initialData={initialData}
       onSubmit={handleSubmit}
-      userType="tenant"
+      userType="manager"
     />
   );
 };

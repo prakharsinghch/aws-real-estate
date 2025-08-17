@@ -61,50 +61,45 @@ export const getManager = async (req: Request, res: Response): Promise<void> => 
     };
 
     export const getManagerProperties = async (req: Request, res: Response): Promise<void> => {
-            try {
-    
-                const {cognitoId} = req.params;
-                const manager = await prisma.manager.findUnique({
-                    where : {cognitoId}
-                })
+        try {
+            const { cognitoId } = req.params;
+            const properties = await prisma.property.findMany({
+                where : {managerCognitoId: cognitoId},
+                include: {
+                    location: true,
+                },
+            });
+            
+            const propertiesWithFormattedLocation = await Promise.all(
+                properties.map(async(property) => {
+                    const coordinates : {coordinates: string}[] = 
+                        await prisma.$queryRaw`SELECT ST_asText(coordinates) as coordinates from "Location" where id = ${property.location.id}`;
+                    
+                    const geoJSON: any = wktToGeoJSON(coordinates[0]?.coordinates || "");
+                    const longitude = geoJSON.coordinates[0];
+                    const latitude = geoJSON.coordinates[1];
 
-                const properties = await prisma.property.findMany({
-                    where : {managerCognitoId : cognitoId},
-                    include : {
-                        location: true
+                    return {
+                        ...property,
+                        location : {
+                            ...property.location,
+                            coordinates : {
+                                longitude,
+                                latitude
+                            }
+                        }
+
                     }
+
                 })
+            );
 
-                const propertiesWithFormatLocation = await Promise.all(
-                    properties.map(async (property) => {
-                        const coordinates : {cooridnates : string}[] =
-                        await prisma.$queryRaw`SELECT ST_asText(coordinates) as coordinates from "Location" where id=${property.location.id}`;
-    
-                        const geoJSON : any = wktToGeoJSON(coordinates[0]?.cooridnates || "");
-                        const longitude = geoJSON.coordinates[0];
-                        const latitude = geoJSON.coordinates[1];
-    
-                        return {
-                            ...property,
-                            location: {
-                                ...property.location,
-                                coordinates: {
-                                    longitude,
-                                    latitude
-                                },
-                            },
-                        };
+            res.json(propertiesWithFormattedLocation);
 
-                    })
-                )
-                        
-                res.json(propertiesWithFormatLocation);
-    
-    
-            } catch(err: any){
-                    res
-                    .status(500)
-                    .json({message : `Error retrieving manager properties : ${err.message }`});
-            }
+        }
+        catch(err: any){
+            res
+             .status(500)
+             .json({message: `Error retrieving manager properties: ${err.message}`});
+        }
     }
-
